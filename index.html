@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Rotación Regional - Danone México</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+            background: #f5f5f5;
+            color: #333;
+        }
+        
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+        }
+        
+        .login-box {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .login-box h1 {
+            font-size: 24px;
+            margin-bottom: 0.5rem;
+            color: #1a1a1a;
+        }
+        
+        .login-box p {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: #333;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #c41e3a;
+            box-shadow: 0 0 0 3px rgba(196, 30, 58, 0.1);
+        }
+        
+        .btn-login {
+            width: 100%;
+            padding: 12px;
+            background: #c41e3a;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .btn-login:hover { background: #a01830; }
+        .btn-login:disabled { background: #ccc; cursor: not-allowed; }
+        
+        .error-message {
+            background: #fee;
+            border: 1px solid #fcc;
+            color: #c41e3a;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        
+        .error-message.show { display: block; }
+        
+        .app-container {
+            display: none;
+            padding: 1.5rem;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .header h1 {
+            font-size: 22px;
+            color: #1a1a1a;
+        }
+        
+        .header-info {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .user-info {
+            text-align: right;
+            font-size: 13px;
+        }
+        
+        .user-info .email { color: #666; }
+        .user-info .sitio { 
+            font-weight: 500;
+            color: #c41e3a;
+            font-size: 14px;
+        }
+        
+        .btn-logout {
+            padding: 8px 16px;
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-logout:hover {
+            background: #e0e0e0;
+        }
+        
+        .content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 2rem;
+        }
+        
+        .metric-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .metric-label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        
+        .metric-value {
+            font-size: 32px;
+            font-weight: 500;
+            color: #1a1a1a;
+            line-height: 1;
+        }
+        
+        .metric-subtext {
+            font-size: 12px;
+            color: #999;
+            margin-top: 8px;
+        }
+        
+        .section {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+        }
+        
+        .section-title {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+            color: #1a1a1a;
+        }
+        
+        .week-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .week-btn {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .week-btn.active {
+            background: #c41e3a;
+            color: white;
+            border-color: #c41e3a;
+        }
+        
+        .week-btn:hover:not(.active) {
+            border-color: #999;
+            background: #f9f9f9;
+        }
+        
+        .table-wrapper {
+            overflow-x: auto;
+            margin-bottom: 1.5rem;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        
+        thead {
+            background: #f5f5f5;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 500;
+            color: #666;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        tr:hover { background: #f9f9f9; }
+        
+        input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #c41e3a;
+            box-shadow: 0 0 0 2px rgba(196, 30, 58, 0.1);
+        }
+        
+        input[type="number"]:disabled {
+            background: #f5f5f5;
+            color: #999;
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-weight: 500;
+            font-size: 16px;
+        }
+        
+        .status-green { background: #e8f5e9; color: #2e7d32; }
+        .status-yellow { background: #fff3e0; color: #f57c00; }
+        .status-red { background: #ffebee; color: #c41e3a; }
+        
+        .summary-row {
+            background: #f5f5f5;
+            font-weight: 500;
+        }
+        
+        .summary-row td {
+            padding: 14px 12px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover {
+            background: #f9f9f9;
+            border-color: #999;
+        }
+        
+        .btn-primary {
+            background: #c41e3a;
+            color: white;
+            border-color: #c41e3a;
+        }
+        
+        .btn-primary:hover {
+            background: #a01830;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+            color: #999;
+        }
+        
+        .loading.show { display: block; }
+        
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #c41e3a;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .message {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        
+        .message.show { display: block; }
+        .message.success { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+        .message.error { background: #ffebee; color: #c41e3a; border: 1px solid #ffcdd2; }
+        
+        @media (max-width: 768px) {
+            .header { flex-direction: column; gap: 1rem; }
+            .metrics-grid { grid-template-columns: 1fr; }
+            .week-selector { flex-direction: column; }
+            .week-btn { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Login -->
+<div id="loginContainer" class="login-container">
+    <div class="login-box">
+        <h1>Control de Rotación</h1>
+        <p>Ingresa con tu email para acceder</p>
+        
+        <div id="errorMessage" class="error-message"></div>
+        
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="email" placeholder="tu.email@danone.com" required>
+            </div>
+            <div class="form-group">
+                <label>Contraseña</label>
+                <input type="password" id="password" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn-login" id="loginBtn">Ingresar</button>
+        </form>
+        
+        <p style="margin-top: 1rem; font-size: 12px; color: #999; text-align: center;">
+            Si no tienes cuenta, contacta al coordinador de RH
+        </p>
+    </div>
+</div>
+
+<!-- App -->
+<div id="appContainer" class="app-container">
+    <div class="header">
+        <h1>📊 Control de Rotación Regional</h1>
+        <div class="header-info">
+            <div class="user-info">
+                <div class="sitio" id="userSitio">—</div>
+                <div class="email" id="userEmail">—</div>
+            </div>
+            <button class="btn-logout" onclick="handleLogout()">Salir</button>
+        </div>
+    </div>
+    
+    <div class="content">
+        <div id="successMessage" class="message success"></div>
+        <div id="errorMessageApp" class="message error"></div>
+        
+        <!-- KPIs -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-label">Bajas Aplicadas</div>
+                <div class="metric-value" id="totalReales">0</div>
+                <div class="metric-subtext">hasta hoy</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Objetivo Mes</div>
+                <div class="metric-value" id="totalObjetivo">0</div>
+                <div class="metric-subtext" id="objetivoSubtext">—</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Proyección Mes</div>
+                <div class="metric-value" id="totalProyectado">0</div>
+                <div class="metric-subtext" id="proyeccionSubtext">—</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">% Avance vs Meta</div>
+                <div class="metric-value" id="totalPorcentaje">0%</div>
+                <div class="metric-subtext" id="porcentajeSubtext">—</div>
+            </div>
+        </div>
+        
+        <!-- Tabla -->
+        <div class="section">
+            <div class="section-title">Captura Semanal de Bajas</div>
+            
+            <div class="week-selector" id="weekSelector"></div>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p style="margin-top: 1rem;">Cargando datos...</p>
+            </div>
+            
+            <div class="table-wrapper" id="tableWrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>HC Actual</th>
+                            <th>Bajas Reales</th>
+                            <th>Bajas Mapeadas</th>
+                            <th>Total Proyectado</th>
+                            <th>Objetivo Mes</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTable"></tbody>
+                    <tfoot>
+                        <tr class="summary-row">
+                            <td id="sumHC">0</td>
+                            <td id="sumReales">0</td>
+                            <td id="sumMapeadas">0</td>
+                            <td id="sumProyectado">0</td>
+                            <td id="sumObjetivo">0</td>
+                            <td>TOTAL</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="saveData()">💾 Guardar Cambios</button>
+                <button class="btn" onclick="exportCSV()">📥 Exportar CSV</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://xxauazuniuljeruddhem.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_Hauyb9zptmnRuM4WbGD3Pw_aYv5uA5k';
+
+const { createClient } = window.supabase;
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let currentWeek = 1;
+let currentUser = null;
+let currentSitio = null;
+let sitioConfig = null;
+let weeklyData = {};
+
+// Login
+async function handleLogin(event) {
+    event.preventDefault();
+    
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const loginBtn = document.getElementById('loginBtn');
+    const errorMsg = document.getElementById('errorMessage');
+    
+    loginBtn.disabled = true;
+    errorMsg.classList.remove('show');
+    
+    try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password
+        });
+        
+        if (error) throw error;
+        
+        currentUser = data.user;
+        
+        // Obtener sitio del usuario
+        const { data: sitios, error: sitioError } = await supabase
+            .from('sitios_config')
+            .select('*')
+            .eq('lider_email', email)
+            .single();
+        
+        if (sitioError) throw new Error('Usuario no tiene un sitio asignado');
+        
+        sitioConfig = sitios;
+        currentSitio = sitios.nombre;
+        
+        showApp();
+        loadData();
+    } catch (error) {
+        errorMsg.textContent = error.message;
+        errorMsg.classList.add('show');
+        loginBtn.disabled = false;
+    }
+}
+
+// Logout
+async function handleLogout() {
+    await supabase.auth.signOut();
+    currentUser = null;
+    currentSitio = null;
+    document.getElementById('loginContainer').style.display = 'flex';
+    document.getElementById('appContainer').style.display = 'none';
+    document.getElementById('loginForm').reset();
+}
+
+// Mostrar app
+function showApp() {
+    document.getElementById('loginContainer').style.display = 'none';
+    document.getElementById('appContainer').style.display = 'block';
+    document.getElementById('userSitio').textContent = currentSitio;
+    document.getElementById('userEmail').textContent = currentUser.email;
+    
+    renderWeekSelector();
+}
+
+// Cargar datos
+async function loadData() {
+    showLoading(true);
+    
+    try {
+        const { data, error } = await supabase
+            .from('bajas')
+            .select('*')
+            .eq('sitio', currentSitio);
+        
+        if (error) throw error;
+        
+        weeklyData = {};
+        for (let i = 1; i <= 5; i++) {
+            weeklyData[i] = { reales: 0, mapeadas: 0 };
+        }
+        
+        data.forEach(row => {
+            weeklyData[row.semana] = {
+                reales: row.bajas_reales,
+                mapeadas: row.bajas_mapeadas
+            };
+        });
+        
+        renderTable();
+        updateMetrics();
+    } catch (error) {
+        showError('Error al cargar datos: ' + error.message);
+    } finally {
+        showLoading(false);
+    }
+}
+
+// Renderizar selector de semanas
+function renderWeekSelector() {
+    const selector = document.getElementById('weekSelector');
+    selector.innerHTML = '';
+    
+    for (let w = 1; w <= 5; w++) {
+        const btn = document.createElement('button');
+        btn.className = `week-btn ${w === currentWeek ? 'active' : ''}`;
+        btn.textContent = `Semana ${w}`;
+        btn.onclick = () => {
+            currentWeek = w;
+            renderWeekSelector();
+            renderTable();
+            updateMetrics();
+        };
+        selector.appendChild(btn);
+    }
+}
+
+// Renderizar tabla
+function renderTable() {
+    const table = document.getElementById('dataTable');
+    table.innerHTML = '';
+    
+    const data = weeklyData[currentWeek];
+    const totalProyectado = data.reales + data.mapeadas;
+    
+    let status = '✓';
+    let statusClass = 'status-green';
+    if (totalProyectado > sitioConfig.objetivo_mes) {
+        status = '⚠';
+        statusClass = 'status-red';
+    } else if (totalProyectado >= sitioConfig.objetivo_mes * 0.8) {
+        status = '!';
+        statusClass = 'status-yellow';
+    }
+    
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td><input type="number" value="${sitioConfig.hc}" disabled></td>
+        <td><input type="number" min="0" id="reales" value="${data.reales}" onchange="updateInput()"></td>
+        <td><input type="number" min="0" id="mapeadas" value="${data.mapeadas}" onchange="updateInput()"></td>
+        <td><strong>${totalProyectado}</strong></td>
+        <td><input type="number" value="${sitioConfig.objetivo_mes}" disabled></td>
+        <td><div class="status-badge ${statusClass}">${status}</div></td>
+    `;
+    table.appendChild(row);
+    
+    // Totales
+    const allReales = Object.values(weeklyData).reduce((sum, w) => sum + w.reales, 0);
+    const allMapeadas = Object.values(weeklyData).reduce((sum, w) => sum + w.mapeadas, 0);
+    
+    document.getElementById('sumHC').textContent = sitioConfig.hc;
+    document.getElementById('sumReales').textContent = allReales;
+    document.getElementById('sumMapeadas').textContent = allMapeadas;
+    document.getElementById('sumProyectado').textContent = allReales + allMapeadas;
+    document.getElementById('sumObjetivo').textContent = sitioConfig.objetivo_mes;
+}
+
+// Actualizar input
+function updateInput() {
+    const reales = parseInt(document.getElementById('reales').value) || 0;
+    const mapeadas = parseInt(document.getElementById('mapeadas').value) || 0;
+    
+    weeklyData[currentWeek] = { reales, mapeadas };
+    renderTable();
+    updateMetrics();
+}
+
+// Actualizar métricas
+function updateMetrics() {
+    const allReales = Object.values(weeklyData).reduce((sum, w) => sum + w.reales, 0);
+    const allMapeadas = Object.values(weeklyData).reduce((sum, w) => sum + w.mapeadas, 0);
+    const totalProyectado = allReales + allMapeadas;
+    const porcentaje = Math.round((totalProyectado / sitioConfig.objetivo_mes) * 100);
+    
+    document.getElementById('totalReales').textContent = allReales;
+    document.getElementById('totalObjetivo').textContent = sitioConfig.objetivo_mes;
+    document.getElementById('totalProyectado').textContent = totalProyectado;
+    document.getElementById('totalPorcentaje').textContent = porcentaje + '%';
+    
+    if (totalProyectado > sitioConfig.objetivo_mes) {
+        document.getElementById('proyeccionSubtext').textContent = '⚠ Sobre meta';
+        document.getElementById('porcentajeSubtext').textContent = 'Riesgo alto';
+    } else if (totalProyectado >= sitioConfig.objetivo_mes * 0.8) {
+        document.getElementById('proyeccionSubtext').textContent = '! Cerca de meta';
+        document.getElementById('porcentajeSubtext').textContent = 'Vigilar';
+    } else {
+        document.getElementById('proyeccionSubtext').textContent = '✓ Controlado';
+        document.getElementById('porcentajeSubtext').textContent = 'OK';
+    }
+}
+
+// Guardar datos
+async function saveData() {
+    showLoading(true);
+    
+    try {
+        for (let semana = 1; semana <= 5; semana++) {
+            const data = weeklyData[semana];
+            
+            const { error } = await supabase
+                .from('bajas')
+                .upsert({
+                    semana,
+                    sitio: currentSitio,
+                    bajas_reales: data.reales,
+                    bajas_mapeadas: data.mapeadas
+                });
+            
+            if (error) throw error;
+        }
+        
+        showSuccess('Datos guardados correctamente ✓');
+    } catch (error) {
+        showError('Error al guardar: ' + error.message);
+    } finally {
+        showLoading(false);
+    }
+}
+
+// Exportar CSV
+function exportCSV() {
+    const allReales = Object.values(weeklyData).reduce((sum, w) => sum + w.reales, 0);
+    const allMapeadas = Object.values(weeklyData).reduce((sum, w) => sum + w.mapeadas, 0);
+    const total = allReales + allMapeadas;
+    
+    let csv = 'Sitio,HC,Bajas Reales,Bajas Mapeadas,Total,Objetivo,Estado\n';
+    const estado = total > sitioConfig.objetivo_mes ? 'RIESGO' : 'OK';
+    csv += `${currentSitio},${sitioConfig.hc},${allReales},${allMapeadas},${total},${sitioConfig.objetivo_mes},${estado}\n`;
+    
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `Rotacion_${currentSitio}_${new Date().toISOString().slice(0,10)}.csv`;
+    link.click();
+}
+
+// Helpers
+function showLoading(show) {
+    document.getElementById('loading').classList.toggle('show', show);
+}
+
+function showSuccess(msg) {
+    const el = document.getElementById('successMessage');
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+function showError(msg) {
+    const el = document.getElementById('errorMessageApp');
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 5000);
+}
+
+// Inicializar
+window.addEventListener('load', () => {
+    supabase.auth.onAuthStateChanged((user) => {
+        if (user) {
+            currentUser = user;
+            const loginContainer = document.getElementById('loginContainer');
+            const appContainer = document.getElementById('appContainer');
+            
+            if (loginContainer.style.display !== 'none') {
+                showApp();
+                loadData();
+            }
+        }
+    });
+});
+</script>
+
+</body>
+</html>
