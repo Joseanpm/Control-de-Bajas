@@ -4,7 +4,7 @@ Sistema de seguimiento semanal de bajas y rotación por sitio. Permite a cada l�
 
 ## 🚀 Acceso Rápido
 
-**Link:** "https://github.com/Joseanpm/Control-de-Bajas"
+**Link:** `https://github.com/Joseanpm/Control-de-Bajas`
 
 ## 🔐 Login
 
