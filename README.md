@@ -13,7 +13,7 @@ Cada líder de sitio tiene credenciales para acceder únicamente a su sitio:
 | Sitio | Email | Password |
 |-------|-------|----------|
 | OAXACA ONE | `edna.castellanos@danone.com` | (asignada por RH) |
-| MÉRIDA ONE | `lider.merida@danone.com` | (asignada por RH) |
+| MÉRIDA ONE | `jose-antonio.perez2@danone.com` | Merida2026! |
 | VILLAHERMOSA ONE | `lider.villahermosa@danone.com` | (asignada por RH) |
 | CANCÚN ONE | `lider.cancun@danone.com` | (asignada por RH) |
 | CÓRDOBA PAIONE | `lider.cordoba@danone.com` | (asignada por RH) |
